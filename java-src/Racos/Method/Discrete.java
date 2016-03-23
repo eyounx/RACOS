@@ -415,7 +415,7 @@ public class Discrete extends BaseParameters{
 
 			double GlobalSample=0;
 			boolean reSample;
-			int ChoosenPos;
+			int ChosenPos;
 			
 			RandomOperator ro = new RandomOperator();
 
@@ -427,17 +427,17 @@ public class Discrete extends BaseParameters{
 					while (reSample) {
 						
 						ResetModel();//reset model
-						ChoosenPos = ro.getInteger(0, this.PositiveNum - 1);//choose an instance randomly
+						ChosenPos = ro.getInteger(0, this.PositiveNum - 1);//choose an instance randomly
 						GlobalSample = ro.getDouble(0, 1);
 						if (GlobalSample >= this.RandProbability) {//sample globally
 							
 						}else{		
 						
-							ShrinkModel(PosPop[ChoosenPos]);//get model by shrinking
+							ShrinkModel(PosPop[ChosenPos]);//get model by shrinking
 							
 						}
 											
-						NextPop[j] = RandomInstance(PosPop[ChoosenPos]);//sample
+						NextPop[j] = RandomInstance(PosPop[ChosenPos]);//sample
 
 						if (notExistInNextPop(j, NextPop[j])) {//if the instance is unique
 							NextPop[j].setValue(task.getValue(NextPop[j])); //query

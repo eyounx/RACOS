@@ -19,6 +19,7 @@
  * @author Yi-Qi Hu
  * @time 2015.11.13
  * @version 2.0
+ * @version 2.1 by Yang Yu: correct the optimal solution
  */
  
  package Racos.ObjectiveFunction;
@@ -40,6 +41,14 @@ public class Ackley implements Task{
 			opt[i] = 0.2;
 		}
 	}
+	
+	public Ackley(double opt[]){
+    dim = new Dimension();
+    dim.setSize(opt.length);
+    dim.setDimension(0, 1, true);
+    this.opt = new double[opt.length];
+    System.arraycopy(opt, 0, this.opt, 0, opt.length);
+  }
 
 	@Override
 	public double getValue(Instance ins) {
@@ -52,8 +61,8 @@ public class Ackley implements Task{
         	v[i] = ins.getFeature(i);
         }
         for(int i=0; i<ins.getFeature().length; i++){
-            squaresum += v[i]*v[i];
-            cossum += Math.cos(Math.PI*2*v[i]);
+            squaresum += (v[i]-opt[i])*(v[i]-opt[i]);
+            cossum += Math.cos(Math.PI*2*(v[i]-opt[i]));
         }
         squaresum /= (double)v.length;
         cossum /= (double)v.length;

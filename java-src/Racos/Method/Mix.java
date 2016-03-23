@@ -454,7 +454,7 @@ public class Mix extends BaseParameters{
 	
 	public void run(){
 		
-		int ChoosenPos;
+		int ChosenPos;
 		double GlobalSample=0;
 		boolean reSample;
 
@@ -470,13 +470,13 @@ public class Mix extends BaseParameters{
 					
 					ResetModel();
 					GlobalSample = ro.getDouble(0, 1);
-					ChoosenPos = ro.getInteger(0, this.PositiveNum-1);//choose an inatance randomly
+					ChosenPos = ro.getInteger(0, this.PositiveNum-1);//choose an inatance randomly
 					if (GlobalSample >= this.RandProbability) {//if sample globally
 					}else{				
-						ShrinkModel(PosPop[ChoosenPos]);//obtain model
+						ShrinkModel(PosPop[ChosenPos]);//obtain model
 					}
 
-					NextPop[j] = RandomInstance(PosPop[ChoosenPos]);//sample
+					NextPop[j] = RandomInstance(PosPop[ChosenPos]);//sample
 					
 					if (notExistInNextPop(j, NextPop[j])) {
 						NextPop[j].setValue(task.getValue(NextPop[j]));//query

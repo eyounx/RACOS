@@ -42,6 +42,14 @@ public class Sphere implements Task{
 		}
 	}
 
+	public Sphere(double opt[]){
+    dim = new Dimension();
+    dim.setSize(opt.length);
+    dim.setDimension(0, 1, true);
+    this.opt = new double[opt.length];
+    System.arraycopy(opt, 0, this.opt, 0, opt.length);
+  }
+
 	@Override
 	public double getValue(Instance ins) {
 		// TODO Auto-generated method stub

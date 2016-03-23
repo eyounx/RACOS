@@ -239,24 +239,43 @@ public class Continue extends BaseParameters{
 	 */
 	protected void ShrinkModel(Instance pos){
 		RandomOperator ro = new RandomOperator();
-		int ChoosenDim;  
-		int ChoosenNeg;  
+		int ChosenDim;  
+		int ChosenNeg;  
 		double tempBound;
+                
+                int availableNSampleSize = this.SampleSize;
 		
-		while (!Distinguish()) {//generate the model
-			ChoosenDim = ro.getInteger(0, dimension.getSize() - 1);//choose a dimension randomly
-			ChoosenNeg = ro.getInteger(0, this.SampleSize - 1);    //choose a negative instance randomly
+		while (!Distinguish(availableNSampleSize)) {//generate the model
+			ChosenDim = ro.getInteger(0, dimension.getSize() - 1);//choose a dimension randomly
+			ChosenNeg = ro.getInteger(0, availableNSampleSize - 1);    //choose a negative instance randomly
 			// shrink model
-			if (pos.getFeature(ChoosenDim) < Pop[ChoosenNeg].getFeature(ChoosenDim)) {
-				tempBound = ro.getDouble(pos.getFeature(ChoosenDim), Pop[ChoosenNeg].getFeature(ChoosenDim));
-				if (tempBound < model.region[ChoosenDim][1]) {
-					model.region[ChoosenDim][1] = tempBound;
-
+			if (pos.getFeature(ChosenDim) < Pop[ChosenNeg].getFeature(ChosenDim)) {
+				tempBound = ro.getDouble(pos.getFeature(ChosenDim), Pop[ChosenNeg].getFeature(ChosenDim));
+				if (tempBound < model.region[ChosenDim][1]) {
+					model.region[ChosenDim][1] = tempBound;
+                                        
+          for(int k=0; k<availableNSampleSize; k++){
+          	if( Pop[k].getFeature(ChosenDim) >= tempBound ){
+	          	availableNSampleSize--;
+	          	Instance tmp = Pop[k];
+	          	Pop[k] = Pop[availableNSampleSize];
+	          	Pop[availableNSampleSize] = tmp;
+          	}
+          }
 				}
 			} else {
-				tempBound = ro.getDouble(Pop[ChoosenNeg].getFeature(ChoosenDim), pos.getFeature(ChoosenDim));
-				if (tempBound > model.region[ChoosenDim][0]) {
-					model.region[ChoosenDim][0] = tempBound;
+				tempBound = ro.getDouble(Pop[ChosenNeg].getFeature(ChosenDim), pos.getFeature(ChosenDim));
+				if (tempBound > model.region[ChosenDim][0]) {
+					model.region[ChosenDim][0] = tempBound;
+                                        
+          for(int k=0; k<availableNSampleSize; k++){
+            if( Pop[k].getFeature(ChosenDim) >= tempBound ){
+              availableNSampleSize--;
+              Instance tmp = Pop[k];
+              Pop[k] = Pop[availableNSampleSize];
+              Pop[availableNSampleSize] = tmp;
+            }
+          }
 				}
 			}
 		}
@@ -295,14 +314,14 @@ public class Continue extends BaseParameters{
 	 * @param model
 	 * @return true or false
 	 */
-	protected boolean Distinguish(){
+	protected boolean Distinguish(int samplesize){
 		int j;
-		for(int i=0;i<this.SampleSize; i++){
+		for(int i=0;i<samplesize; i++){
 			for(j=0; j<dimension.getSize(); j++){
 				if(Pop[i].getFeature(j)>model.region[j][0]&&Pop[i].getFeature(j)<model.region[j][1]){
-					
+                                    
 				}else{
-					break;
+        	break;
 				}
 			}
 			if(j==dimension.getSize()){
@@ -394,7 +413,7 @@ public class Continue extends BaseParameters{
 	 */
 	public void run(){
 		
-		int ChoosenPos;
+		int ChosenPos;
 		double GlobalSample;
 		boolean reSample;
 		RandomOperator ro = new RandomOperator();
@@ -410,17 +429,17 @@ public class Continue extends BaseParameters{
 				reSample = true;
 				while (reSample) {		
 					ResetModel();
-					ChoosenPos = ro.getInteger(0, this.PositiveNum - 1);
+					ChosenPos = ro.getInteger(0, this.PositiveNum - 1);
 					GlobalSample = ro.getDouble(0, 1);
 					if (GlobalSample >= this.RandProbability) {
 					} else {
 
-						ShrinkModel(PosPop[ChoosenPos]);//shrinking model
+						ShrinkModel(PosPop[ChosenPos]);//shrinking model
 
 						setRandomBits();//set uncertain bits
 						
 					}
-					NextPop[j] = RandomInstance(PosPop[ChoosenPos]);//sample
+					NextPop[j] = RandomInstance(PosPop[ChosenPos]);//sample
 					if (notExistInstance(j, NextPop[j])) {
 						NextPop[j].setValue(task.getValue(NextPop[j]));//query
 						reSample = false;

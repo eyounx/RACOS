@@ -5,7 +5,7 @@ import Racos.Method.*;
 import Racos.ObjectiveFunction.*;
 import Racos.Tools.RandomOperator;
 
-public class MyMain {
+public class examples {
 
 	public static void main(String[] args) {
 		
