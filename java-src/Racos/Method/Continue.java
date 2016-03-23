@@ -243,9 +243,9 @@ public class Continue extends BaseParameters{
 		int ChosenNeg;  
 		double tempBound;
                 
-                int availableNSampleSize = this.SampleSize;
+    int availableNSampleSize = this.SampleSize;
 		
-		while (!Distinguish(availableNSampleSize)) {//generate the model
+		while (availableNSampleSize>0) {//generate the model
 			ChosenDim = ro.getInteger(0, dimension.getSize() - 1);//choose a dimension randomly
 			ChosenNeg = ro.getInteger(0, availableNSampleSize - 1);    //choose a negative instance randomly
 			// shrink model
@@ -254,13 +254,15 @@ public class Continue extends BaseParameters{
 				if (tempBound < model.region[ChosenDim][1]) {
 					model.region[ChosenDim][1] = tempBound;
                                         
-          for(int k=0; k<availableNSampleSize; k++){
-          	if( Pop[k].getFeature(ChosenDim) >= tempBound ){
-	          	availableNSampleSize--;
-	          	Instance tmp = Pop[k];
-	          	Pop[k] = Pop[availableNSampleSize];
-	          	Pop[availableNSampleSize] = tmp;
-          	}
+          for(int k=0; k<availableNSampleSize;){
+              if( Pop[k].getFeature(ChosenDim) >= tempBound ){
+                  availableNSampleSize--; 
+                  Instance tmp = Pop[k];
+                  Pop[k] = Pop[availableNSampleSize];
+                  Pop[availableNSampleSize] = tmp;
+              }else{
+                  k++;
+              }
           }
 				}
 			} else {
@@ -268,13 +270,15 @@ public class Continue extends BaseParameters{
 				if (tempBound > model.region[ChosenDim][0]) {
 					model.region[ChosenDim][0] = tempBound;
                                         
-          for(int k=0; k<availableNSampleSize; k++){
-            if( Pop[k].getFeature(ChosenDim) >= tempBound ){
-              availableNSampleSize--;
-              Instance tmp = Pop[k];
-              Pop[k] = Pop[availableNSampleSize];
-              Pop[availableNSampleSize] = tmp;
-            }
+          for(int k=0; k<availableNSampleSize;){
+              if( Pop[k].getFeature(ChosenDim) <= tempBound ){
+                  availableNSampleSize--; 
+                  Instance tmp = Pop[k];
+                  Pop[k] = Pop[availableNSampleSize];
+                  Pop[availableNSampleSize] = tmp;
+              }else{
+                  k++;
+              }
           }
 				}
 			}
