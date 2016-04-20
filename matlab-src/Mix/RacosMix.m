@@ -1,26 +1,4 @@
-% This program is free software; you can redistribute it and/or
-% modify it under the terms of the GNU General Public License
-% as published by the Free Software Foundation; either version 2
-% of the License, or (at your option) any later version.
-%
-% This program is distributed in the hope that it will be useful,
-% but WITHOUT ANY WARRANTY; without even the implied warranty of
-% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-% GNU General Public License for more details.
-%
-% You should have received a copy of the GNU General Public License
-% along with this program; if not, write to the Free Software
-% Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-%
-% Copyright (C) 2015 Nanjing University, Nanjing, China
-% 
-% Author Yi-Qi Hu
-% Date 2015.12.2
-% Version 1.0
-% 
-
-function Optimal=RacosMix(dim_size,dim,dim_type,iteration,samplesize,positivesize,uncertainbits,probability,fct)
-
+function [Optimal, Optimalv] = RacosMix(dim_size,dim,dim_type,iteration,samplesize,positivesize,uncertainbits,probability,fct)
 %--------------parameters-----------------%
 %dim_size: dimension size
 %dim: region matrix, is a d*2 matrix. d=dim_size, dim(i,1) is i-th
@@ -53,6 +31,7 @@ end
 %initialize postive population
 for i=1:positivesize
     m = find(Popv == min(Popv));  %find min value in Pop
+    m = m(1, 1);
     PosPop(i,:) = Pop(m,:);       %obtain positive instance
     PosPopv(1,i) = Popv(1,m);     %obtain the value of positive instance 
     Pop(m,:) = [];                %delete this instance in Pop
@@ -134,6 +113,7 @@ for itera=2:iteration
     %update PosPop
     for j=1:positivesize
         m = find(Popv == min(Popv));
+        m = m(1,1);
         k=1;
         while(k<=positivesize)
             if PosPopv(1,k)>Popv(1,m)
@@ -162,7 +142,7 @@ for itera=2:iteration
         Optimalv = PosPopv(1,1);
     end
 end
-fprintf('%d',Optimalv);        %print the best value
+% fprintf('%d',Optimalv);        %print the best value
 return;
 %return the best point Optimal after last iteration
 %------------------------------------------------------------
