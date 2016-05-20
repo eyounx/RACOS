@@ -1,21 +1,4 @@
-/* This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- *
- * Copyright (C) 2015 Nanjing University, Nanjing, China
- */
- 
- /**
+/**
  * Class continue
  * @author Yi-Qi Hu
  * @time 2015.11.14
@@ -28,6 +11,8 @@ package Racos.Method;
 import Racos.Componet.*;
 import Racos.Tools.*;
 import Racos.ObjectiveFunction.*;
+
+import java.nio.channels.ShutdownChannelGroupException;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -40,6 +25,9 @@ public class Continue extends BaseParameters{
 	private Instance[] PosPop;           //the instance set with best objective function value
 	private Instance Optimal;            //an instance with the best objective function value
 	private Model model;
+	private RandomOperator ro;
+	
+	
 	private class Model{                 //the model of generating next instance
 		
 		public double[][] region;//shrinked region
@@ -74,6 +62,7 @@ public class Continue extends BaseParameters{
 	public Continue(Task ta){
 		task = ta;
 		dimension = ta.getDim();
+		ro = new RandomOperator();
 	}
 	
 	//the next several functions are prepared for testing
@@ -131,7 +120,6 @@ public class Continue extends BaseParameters{
 	 */
 	protected Instance RandomInstance(){
 		Instance ins = new Instance(dimension);
-		RandomOperator ro = new RandomOperator();//tool of randomizing
 		for(int i=0; i<dimension.getSize(); i++){
 			
 			if(dimension.getType(i)){//if i-th dimension type is continue
@@ -152,7 +140,6 @@ public class Continue extends BaseParameters{
 	 */
 	protected Instance RandomInstance(Instance pos){
 		Instance ins = new Instance(dimension);
-		RandomOperator ro = new RandomOperator();//tool of randomizing
 //		model.PrintLabel();
 		for(int i=0; i<dimension.getSize(); i++){
 			
@@ -238,48 +225,47 @@ public class Continue extends BaseParameters{
 	 * @param pos
 	 */
 	protected void ShrinkModel(Instance pos){
-		RandomOperator ro = new RandomOperator();
-		int ChosenDim;  
-		int ChosenNeg;  
+		int ChoosenDim;  
+		int ChoosenNeg;  
 		double tempBound;
-                
-    int availableNSampleSize = this.SampleSize;
 		
-		while (availableNSampleSize>0) {//generate the model
-			ChosenDim = ro.getInteger(0, dimension.getSize() - 1);//choose a dimension randomly
-			ChosenNeg = ro.getInteger(0, availableNSampleSize - 1);    //choose a negative instance randomly
+		int ins_left = SampleSize;
+		while (ins_left>0) {//generate the model
+			ChoosenDim = ro.getInteger(0, dimension.getSize() - 1);//choose a dimension randomly
+			ChoosenNeg = ro.getInteger(0, this.SampleSize - 1);    //choose a negative instance randomly
 			// shrink model
-			if (pos.getFeature(ChosenDim) < Pop[ChosenNeg].getFeature(ChosenDim)) {
-				tempBound = ro.getDouble(pos.getFeature(ChosenDim), Pop[ChosenNeg].getFeature(ChosenDim));
-				if (tempBound < model.region[ChosenDim][1]) {
-					model.region[ChosenDim][1] = tempBound;
-                                        
-          for(int k=0; k<availableNSampleSize;){
-              if( Pop[k].getFeature(ChosenDim) >= tempBound ){
-                  availableNSampleSize--; 
-                  Instance tmp = Pop[k];
-                  Pop[k] = Pop[availableNSampleSize];
-                  Pop[availableNSampleSize] = tmp;
-              }else{
-                  k++;
-              }
-          }
+			if (pos.getFeature(ChoosenDim) < Pop[ChoosenNeg].getFeature(ChoosenDim)) {
+				tempBound = ro.getDouble(pos.getFeature(ChoosenDim), Pop[ChoosenNeg].getFeature(ChoosenDim));
+				if (tempBound < model.region[ChoosenDim][1]) {
+					model.region[ChoosenDim][1] = tempBound;
+					int i=0;
+					while(i<ins_left){
+						if(Pop[i].getFeature(ChoosenDim)>=tempBound){
+							ins_left--;
+							Instance tempins = Pop[i];
+							Pop[i] = Pop[ins_left];
+							Pop[ins_left] = tempins;
+						}else{
+							i++;
+						}
+					}
+
 				}
 			} else {
-				tempBound = ro.getDouble(Pop[ChosenNeg].getFeature(ChosenDim), pos.getFeature(ChosenDim));
-				if (tempBound > model.region[ChosenDim][0]) {
-					model.region[ChosenDim][0] = tempBound;
-                                        
-          for(int k=0; k<availableNSampleSize;){
-              if( Pop[k].getFeature(ChosenDim) <= tempBound ){
-                  availableNSampleSize--; 
-                  Instance tmp = Pop[k];
-                  Pop[k] = Pop[availableNSampleSize];
-                  Pop[availableNSampleSize] = tmp;
-              }else{
-                  k++;
-              }
-          }
+				tempBound = ro.getDouble(Pop[ChoosenNeg].getFeature(ChoosenDim), pos.getFeature(ChoosenDim));
+				if (tempBound > model.region[ChoosenDim][0]) {
+					model.region[ChoosenDim][0] = tempBound;
+					int i=0;
+					while(i<ins_left){
+						if(Pop[i].getFeature(ChoosenDim)<=tempBound){
+							ins_left--;
+							Instance tempins = Pop[i];
+							Pop[i] = Pop[ins_left];
+							Pop[ins_left] = tempins;
+						}else{
+							i++;
+						}
+					}
 				}
 			}
 		}
@@ -294,7 +280,6 @@ public class Continue extends BaseParameters{
 	 * @return
 	 */
 	protected void setRandomBits(){
-		RandomOperator ro = new RandomOperator();
 		int labelMarkNum;
 		int[] labelMark = new int[dimension.getSize()];
 		int tempLab;
@@ -318,14 +303,14 @@ public class Continue extends BaseParameters{
 	 * @param model
 	 * @return true or false
 	 */
-	protected boolean Distinguish(int samplesize){
+	protected boolean Distinguish(){
 		int j;
-		for(int i=0;i<samplesize; i++){
+		for(int i=0;i<this.SampleSize; i++){
 			for(j=0; j<dimension.getSize(); j++){
 				if(Pop[i].getFeature(j)>model.region[j][0]&&Pop[i].getFeature(j)<model.region[j][1]){
-                                    
+					
 				}else{
-        	break;
+					break;
 				}
 			}
 			if(j==dimension.getSize()){
@@ -406,7 +391,9 @@ public class Continue extends BaseParameters{
 	 */
 	protected void UpdateOptimal(){
 		if (Optimal.getValue() > PosPop[0].getValue()) {
-			Optimal=PosPop[0];
+			Optimal=PosPop[0];			
+//			System.out.print("iteration:"+i);
+//			Optimal.PrintInstance();
 		}
 		return ;
 	}
@@ -415,35 +402,46 @@ public class Continue extends BaseParameters{
 	 * after setting parameters of Racos, user call this function can obtain optimal
 	 * 
 	 */
-	public void run(){
+	public double[] run(){
 		
-		int ChosenPos;
+		
+		int ChoosenPos;
 		double GlobalSample;
 		boolean reSample;
-		RandomOperator ro = new RandomOperator();
+		/////////////////////////////////////
+		double[] result = new double[6];
 		
 		model = new Model(dimension.getSize());
 		
 		ResetModel();
 		Initialize();
 		
-		for(int i=1; i<this.MaxIteration; i++){		
+		for(int i=1; i<this.MaxIteration; i++){	
+	/*		if((i+1)%200==0){
+		//		result[(i+1)/200-1] = Optimal.getValue();
+				System.out.println("iteration:"+i+":"+Optimal.getValue());
+			}*/
+			
+//			PrintPosPop();
+			
+//			PrintPop();
+			
 			for(int j=0; j<this.SampleSize; j++){
 
 				reSample = true;
 				while (reSample) {		
 					ResetModel();
-					ChosenPos = ro.getInteger(0, this.PositiveNum - 1);
+					ChoosenPos = ro.getInteger(0, this.PositiveNum - 1);
 					GlobalSample = ro.getDouble(0, 1);
 					if (GlobalSample >= this.RandProbability) {
 					} else {
 
-						ShrinkModel(PosPop[ChosenPos]);//shrinking model
+						ShrinkModel(PosPop[ChoosenPos]);//shrinking model
 
 						setRandomBits();//set uncertain bits
 						
 					}
-					NextPop[j] = RandomInstance(PosPop[ChosenPos]);//sample
+					NextPop[j] = RandomInstance(PosPop[ChoosenPos]);//sample
 					if (notExistInstance(j, NextPop[j])) {
 						NextPop[j].setValue(task.getValue(NextPop[j]));//query
 						reSample = false;
@@ -459,9 +457,13 @@ public class Continue extends BaseParameters{
 			UpdatePosPop();//update PosPop set
 			
 			UpdateOptimal();//obtain optimal
+			
+//			System.out.println("itera:"+i+":"+Optimal.getValue());
 
 		}
-		return ;
+//		result[5] = Optimal.getValue();
+//		System.out.println("modelcount:"+modelcount);
+		return result;
 		
 	}
 	
