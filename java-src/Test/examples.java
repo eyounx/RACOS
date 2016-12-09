@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
-import Racos.Component.*;
+import Racos.Componet.*;
 import Racos.Method.*;
 import Racos.ObjectiveFunction.*;
 import Racos.Tools.RandomOperator;
