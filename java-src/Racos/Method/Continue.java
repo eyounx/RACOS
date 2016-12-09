@@ -8,13 +8,12 @@
 
 package Racos.Method;
 
-import Racos.Componet.*;
 import Racos.Tools.*;
-import Racos.ObjectiveFunction.*;
 
-import java.nio.channels.ShutdownChannelGroupException;
 import java.util.ArrayList;
-import java.util.Collections;
+
+import Racos.Componet.*;
+import Racos.ObjectiveFunction.*;
 
 public class Continue extends BaseParameters{
 	
@@ -24,6 +23,8 @@ public class Continue extends BaseParameters{
 	private Instance[] NextPop;          //the instance set that algorithm will generate using instance set Pop
 	private Instance[] PosPop;           //the instance set with best objective function value
 	private Instance Optimal;            //an instance with the best objective function value
+	private boolean on_off;				 //switch of sequential racos
+	private int BudCount;
 	private Model model;
 	private RandomOperator ro;
 	
@@ -55,7 +56,7 @@ public class Continue extends BaseParameters{
 	
 	/**
 	 * constructors function
-	 * user must constructs class Continue with a class which implements interface Task
+	 * user must construct class Continue with a class which implements interface Task
 	 * 
 	 * @param ta  the class which implements interface Task
 	 */
@@ -63,6 +64,7 @@ public class Continue extends BaseParameters{
 		task = ta;
 		dimension = ta.getDim();
 		ro = new RandomOperator();
+		this.on_off = false; 			//set batch-racos
 	}
 	
 	//the next several functions are prepared for testing
@@ -103,6 +105,22 @@ public class Continue extends BaseParameters{
 			System.out.print("["+model.region[i][0]+","+model.region[i][1]+"] ");
 		}
 		System.out.println();
+	}
+	
+	/**
+	 * using sequential Racos
+	 */
+	public void TurnOnSequentialRacos(){
+		this.on_off = true;
+		return ;
+	}
+	
+	/**
+	 * using batch-Racos
+	 */
+	public void TurnOffSequentialRacos(){
+		this.on_off = false;
+		return ;
 	}
 	
 	/**
@@ -177,6 +195,9 @@ public class Continue extends BaseParameters{
 		for(int i=0; i<SampleSize+PositiveNum; i++){
 			temp[i] = RandomInstance();
 			temp[i].setValue(task.getValue(temp[i]));
+			if (this.on_off){
+				this.BudCount++;
+			}
 		}	
 				
 		//sort Pop according to objective function value
@@ -207,7 +228,7 @@ public class Continue extends BaseParameters{
 	}
 	
 	/**
-	 * 
+	 * reset sampling model
 	 * @return the model with original feasible region and all label is true
 	 */
 	protected void ResetModel(){
@@ -231,6 +252,7 @@ public class Continue extends BaseParameters{
 		
 		int ins_left = SampleSize;
 		while (ins_left>0) {//generate the model
+			
 			ChoosenDim = ro.getInteger(0, dimension.getSize() - 1);//choose a dimension randomly
 			ChoosenNeg = ro.getInteger(0, this.SampleSize - 1);    //choose a negative instance randomly
 			// shrink model
@@ -387,13 +409,47 @@ public class Continue extends BaseParameters{
 	}
 	
 	/**
+	 * update sample set for sequential racos
+	 * 
+	 */
+	protected void UpdateSampleSet(Instance temp){
+		Instance TempIns = new Instance(dimension);
+		RandomOperator ro = new RandomOperator();
+		int j;
+		
+		for(j=0; j<this.PositiveNum; j++){
+			if(PosPop[j].getValue()>temp.getValue()){
+				break;
+			}
+		}
+		if(j<this.PositiveNum){
+			TempIns=temp;
+			temp=PosPop[this.PositiveNum-1];
+			for(int k=this.PositiveNum-1; k>j;k--){
+				PosPop[k]=PosPop[k-1];
+			}
+			PosPop[j]=TempIns;
+		}
+
+		for(j=0; j<this.SampleSize; j++){
+			if(Pop[j].getValue()>temp.getValue())
+				break;
+		}
+		if(j<this.SampleSize){
+			for(int k=this.SampleSize-1; k>j;k--){
+				Pop[k]=Pop[k-1];
+			}
+			Pop[j]=temp;
+		}
+		return ;
+	}
+	
+	/**
 	 * update optimal
 	 */
 	protected void UpdateOptimal(){
 		if (Optimal.getValue() > PosPop[0].getValue()) {
 			Optimal=PosPop[0];			
-//			System.out.print("iteration:"+i);
-//			Optimal.PrintInstance();
 		}
 		return ;
 	}
@@ -402,9 +458,9 @@ public class Continue extends BaseParameters{
 	 * after setting parameters of Racos, user call this function can obtain optimal
 	 * 
 	 */
-	public double[] run(){
+	public void run(){
 		
-		
+		this.BudCount = 0;
 		int ChoosenPos;
 		double GlobalSample;
 		boolean reSample;
@@ -416,18 +472,40 @@ public class Continue extends BaseParameters{
 		ResetModel();
 		Initialize();
 		
-		for(int i=1; i<this.MaxIteration; i++){	
-	/*		if((i+1)%200==0){
-		//		result[(i+1)/200-1] = Optimal.getValue();
-				System.out.println("iteration:"+i+":"+Optimal.getValue());
-			}*/
-			
-//			PrintPosPop();
-			
-//			PrintPop();
-			
-			for(int j=0; j<this.SampleSize; j++){
-
+		// batch Racos
+		if (!this.on_off){
+			// for each loop
+			for(int i=1; i<this.MaxIteration; i++){	
+				// for each sample in a loop
+				for(int j=0; j<this.SampleSize; j++){	
+					reSample = true;
+					while (reSample) {		
+						ResetModel();
+						ChoosenPos = ro.getInteger(0, this.PositiveNum - 1);
+						GlobalSample = ro.getDouble(0, 1);
+						if (GlobalSample >= this.RandProbability) {
+						} else {	
+							ShrinkModel(PosPop[ChoosenPos]);//shrinking model
+							setRandomBits();//set uncertain bits							
+						}
+						NextPop[j] = RandomInstance(PosPop[ChoosenPos]);//sample
+						if (notExistInstance(j, NextPop[j])) {
+							NextPop[j].setValue(task.getValue(NextPop[j]));//query
+							reSample = false;
+						}
+					}
+				}				
+				//copy NextPop
+				for (int j = 0; j < this.SampleSize; j++) {
+					Pop[j] = NextPop[j];
+				}				
+				UpdatePosPop();//update PosPop set				
+				UpdateOptimal();//obtain optimal	
+			}
+		}else{
+			// sequential Racos
+			Instance new_sample = null;
+			for(; BudCount<this.Budget; ){	
 				reSample = true;
 				while (reSample) {		
 					ResetModel();
@@ -435,39 +513,21 @@ public class Continue extends BaseParameters{
 					GlobalSample = ro.getDouble(0, 1);
 					if (GlobalSample >= this.RandProbability) {
 					} else {
-
 						ShrinkModel(PosPop[ChoosenPos]);//shrinking model
-
-						setRandomBits();//set uncertain bits
-						
+						setRandomBits();//set uncertain bits						
 					}
-					NextPop[j] = RandomInstance(PosPop[ChoosenPos]);//sample
-					if (notExistInstance(j, NextPop[j])) {
-						NextPop[j].setValue(task.getValue(NextPop[j]));//query
+					new_sample = RandomInstance(PosPop[ChoosenPos]);//sample
+					if (notExistInstance(0, new_sample)) {
+						new_sample.setValue(task.getValue(new_sample));//query
+						BudCount++;
 						reSample = false;
 					}
 				}
-			}
-			
-			//copy NextPop
-			for (int j = 0; j < this.SampleSize; j++) {
-				Pop[j] = NextPop[j];
-			}
-			
-			UpdatePosPop();//update PosPop set
-			
-			UpdateOptimal();//obtain optimal
-			
-//			System.out.println("itera:"+i+":"+Optimal.getValue());
+				UpdateSampleSet(new_sample);//update PosPop set
+				UpdateOptimal();//obtain optimal
 
+			}
 		}
-//		result[5] = Optimal.getValue();
-//		System.out.println("modelcount:"+modelcount);
-		return result;
-		
+		return ;		
 	}
-	
-	
-	
-
 }
