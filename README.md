@@ -1,3 +1,8 @@
+# Change Log
+### Dec. 9, 2016
+Update to include SRACOS in Python and Java version <br/>
+Bugs fixed in Python version
+
 # RACOS
 A theoretically-grounded derivative-free optimization method, born from a statistical view of evolutionary algorithms. More details can be found in the paper:
 > Yang Yu, Hong Qian, and Yi-Qi Hu. Derivative-Free Optimization via Classification. In: Proceedings of the 30th AAAI Conference on Artificial Intelligence (AAAI'16), Phoenix, AZ, 2016  ([PDF file](http://lamda.nju.edu.cn/yuy/GetFile.aspx?File=papers/aaai16-racos.pdf))
@@ -10,10 +15,14 @@ SRACOS is the online version of RACOS, which can be much faster than RACOS in on
 Details can be found in the paper:
 > Yi-Qi Hu, Hong Qian, and Yang Yu. Sequential classification-based optimization for direct policy search. In: Proceedings of the 31st AAAI Conference on Artificial Intelligence (AAAI’17), San Francisco, CA, 2017. ([PDF file](http://lamda.nju.edu.cn/yuy/GetFile.aspx?File=papers/aaai17-sracos-with-appendix.pdf))
 
-SRACOS is currently available only in the Python version by running RACOS as
+SRACOS is currently available only in the Python and Java version by running RACOS as
 ```Python
 OnlineSwitch = true
 racos.ContinueOpt(Sphere, SampleSize, MaxIteration, PositiveNum, RandProbability, UncertainBits, OnlineSwitch)
+```
+```Java
+Continue con = new Continue(t);
+con.TurnOnSequentialRacos();
 ```
 
 **A major rewrite of RACOS is coming soon...**
