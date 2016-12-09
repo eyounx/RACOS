@@ -31,24 +31,23 @@ from Components import Instance
 from Components import Dimension
 from Tools import RandomOperator
 
-class RacosOptimizaiton:
-
-    __Pop = []                  # population set
-    __PosPop = []               # positive sample set
-    __Optimal = []              # the best sample so far
-    __NextPop = []              # the next population set
-    __region = []               # the region of model
-    __label = []                # the random label, if true random in this dimension
-    __SampleSize = 0            # the instance number of sampling in an iteration
-    __MaxIteration = 0          # the number of iterations
-    __Budget = 0                # budget of evaluation
-    __PositiveNum = 0           # the set size of PosPop
-    __RandProbability = 0       # the probability of sample in model
-    __UncertainBits = 0         # the dimension size that is sampled randomly
-    __OnlineSwitch = False
-
+class RacosOptimization:
 
     def __init__(self, dim):
+
+        self.__Pop = []             # population set
+        self.__PosPop = []          # positive sample set
+        self.__Optimal = []         # the best sample so far
+        self.__NextPop = []         # the next population set
+        self.__region = []          # the region of model
+        self.__label = []           # the random label, if true random in this dimension
+        self.__SampleSize = 0       # the instance number of sampling in an iteration
+        self.__MaxIteration = 0     # the number of iterations
+        self.__Budget = 0           # budget of evaluation
+        self.__PositiveNum = 0      # the set size of PosPop
+        self.__RandProbability = 0  # the probability of sample in model
+        self.__UncertainBits = 0    # the dimension size that is sampled randomly
+        self.__OnlineSwitch = False
         self.__dimension = dim
 
         for i in range(dim.getSize()):
@@ -67,6 +66,13 @@ class RacosOptimizaiton:
 
     def OnlineTurnOff(self):
         self.__OnlineSwitch = False
+
+    def Clear(self):
+        self.__Pop = []
+        self.__PosPop = []
+        self.__Optimal = []
+        self.__NextPop = []
+        return
 
     # Parameters setting
     def setParameters(self, ss, mt, pn, rp, ub):
@@ -324,16 +330,15 @@ class RacosOptimizaiton:
     '''
     def ContinueOpt(self, func, ss, mt, pn, rp, ub):
 
+        self.Clear()
         self.setParameters(ss, mt, pn, rp, ub)
         self.ResetModel()
         self.Initialize(func)
 
-
         if self.__OnlineSwitch is False:
             # no online style
             for itera in range(self.__MaxIteration-1):
-                if (itera % 1 == 0):
-                    print 'iteration:', itera, ':', self.__Optimal.getFitness()
+
                 self.__NextPop = []
                 for sam in range(self.__SampleSize):
                     while(True):
@@ -440,19 +445,15 @@ class RacosOptimizaiton:
         ub:   uncertain bits
     '''
     def DiscreteOpt(self, func, ss, mt, pn, rp, ub):
-
+        self.Clear()
         self.setParameters(ss, mt, pn, rp, ub)
         self.ResetModel()
         self.Initialize(func)
 
         if self.__OnlineSwitch is False:
             for itera in range(self.__MaxIteration - 1):
-                if (itera % 1 == 0):
-                    print 'iteration:', itera, ':', self.__Optimal.getFitness()
-                self.__NextPop = []
 
-                # self.ShowPosPop(True)
-                # self.ShowPop(True)
+                self.__NextPop = []
 
                 for sam in range(self.__SampleSize):
                     while (True):
@@ -574,7 +575,7 @@ class RacosOptimizaiton:
         ub:   uncertain bits
     '''
     def MixOpt(self, func, ss, mt, pn, rp, ub):
-
+        self.Clear()
         self.setParameters(ss, mt, pn, rp, ub)
         self.ResetModel()
         self.Initialize(func)
@@ -582,8 +583,7 @@ class RacosOptimizaiton:
         if self.__OnlineSwitch is False:
 
             for itera in range(self.__MaxIteration - 1):
-                if (itera % 1 == 0):
-                    print 'iteration:', itera, ':', self.__Optimal.getFitness()
+
                 self.__NextPop = []
 
                 # self.ShowPosPop(True)

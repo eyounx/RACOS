@@ -26,9 +26,24 @@ Time:
  Copyright (C) 2015 Nanjing University, Nanjing, China
 '''
 
+import math
+
 #Sphere function for continue optimization
 def Sphere(x):
     value = sum([(i-0.2)*(i-0.2) for i in x])
+    return value
+
+# Ackley function for continue optimization
+def Ackley(x):
+    bias = 0.2
+    value_seq = 0
+    value_cos = 0
+    for i in range(len(x)):
+        value_seq += (x[i]-bias)*(x[i]-bias)
+        value_cos += math.cos(2.0*math.pi*(x[i]-bias))
+    ave_seq = value_seq/len(x)
+    ave_cos = value_cos/len(x)
+    value = -20*math.exp(-0.2*math.sqrt(ave_seq))-math.exp(ave_cos)+20.0+math.e
     return value
 
 #A test function for mixed optimization

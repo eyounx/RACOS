@@ -26,44 +26,66 @@ time:
  Copyright (C) 2015 Nanjing University, Nanjing, China
 '''
 
-from Racos import RacosOptimizaiton
+from Racos import RacosOptimization
 from Components import Dimension
 from ObjectiveFunction import Sphere
+from ObjectiveFunction import Ackley
 from ObjectiveFunction import SetCover
 from ObjectiveFunction import MixedFunction
+import numpy as np
 
 # parameters
-SampleSize = 5             # the instance number of sampling in an iteration
-MaxIteration = 30         # the number of iterations
-Budget = 150               # budget in online style
-PositiveNum = 2            # the set size of PosPop
-RandProbability = 0.95     # the probability of sample in model
-UncertainBits = 3          # the dimension size that is sampled randomly
+SampleSize = 20             # the instance number of sampling in an iteration
+MaxIteration = 100          # the number of iterations
+Budget = 2000               # budget in online style
+PositiveNum = 1             # the set size of PosPop
+RandProbability = 0.99      # the probability of sample in model
+UncertainBits = 1           # the dimension size that is sampled randomly
+
+
+def ResultAnalysis(res, top):
+    res.sort()
+    top_k = []
+    for i in range(top):
+        top_k.append(res[i])
+    mean_r = np.mean(top_k)
+    std_r = np.std(top_k)
+    print mean_r, '#', std_r
+    return
 
 # continuous optimization
-if False:
+if True:
 
-    #dimension setting
-    DimSize = 10
+    # dimension setting
+    repeat = 15
+    results = []
+    DimSize = 100
     regs = []
-    regs.append(-1)
-    regs.append(1)
+    regs.append(0.0)
+    regs.append(1.0)
 
     dim = Dimension()
     dim.setDimensionSize(DimSize)
     for i in range(DimSize):
         dim.setRegion(i, regs, True)
 
-    racos = RacosOptimizaiton(dim)
+    for i in range(repeat):
+        print i, ':--------------------------------------------------------------'
+        racos = RacosOptimization(dim)
 
-    # call online version RACOS
-    #racos.OnlineTurnOn()
-    #racos.ContinueOpt(Sphere, SampleSize, Budget, PositiveNum, RandProbability, UncertainBits)
+        # call online version RACOS
+        # racos.OnlineTurnOn()
+        # racos.ContinueOpt(Ackley, SampleSize, Budget, PositiveNum, RandProbability, UncertainBits)
 
-    racos.ContinueOpt(Sphere, SampleSize, MaxIteration, PositiveNum, RandProbability, UncertainBits)
+        racos.ContinueOpt(Ackley, SampleSize, MaxIteration, PositiveNum, RandProbability, UncertainBits)
 
-    print racos.getOptimal().getFeatures()
-    print racos.getOptimal().getFitness()
+        # print racos.getOptimal().getFeatures()
+        print racos.getOptimal().getFitness()
+        results.append(racos.getOptimal().getFitness())
+
+    print '======================================================================'
+    ResultAnalysis(results, 5)
+
 
 # discrete optimization
 if False:
@@ -79,7 +101,7 @@ if False:
     for i in range(DimSize):
         dim.setRegion(i, regs, False)
 
-    racos = RacosOptimizaiton(dim)
+    racos = RacosOptimization(dim)
 
     # call online version RACOS
     #racos.OnlineTurnOn()
@@ -91,7 +113,7 @@ if False:
     print racos.getOptimal().getFitness()
 
 # mixed optimization
-if True:
+if False:
 
     # dimension setting
     DimSize = 10
@@ -110,7 +132,7 @@ if True:
         else:
             dim.setRegion(i, regs2, False)
 
-    racos = RacosOptimizaiton(dim)
+    racos = RacosOptimization(dim)
 
     # call online version RACOS
     #racos.OnlineTurnOn()
