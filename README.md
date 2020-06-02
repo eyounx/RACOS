@@ -25,6 +25,6 @@ Continue con = new Continue(t);
 con.TurnOnSequentialRacos();
 ```
 
-**latest python version of RACOS is in an on going project ZOO: https://github.com/eyounx/ZOO**
+**latest python version of RACOS is in an on going project ZOOpt: https://github.com/polixir/ZOOpt**
 
 The codes are released under the GNU GPL 2.0 license. For commercial purposes, please contact Dr. Yang Yu (yuy@nju.edu.cn) or Prof. Zhi-Hua Zhou (zhouzh@nju.edu.cn)
